@@ -1,0 +1,12 @@
+{
+  "name": "facturaereader",
+  "version": "1.0.0",
+  "description": "A simple facturae reader",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Christian Granado Rodríguez",
+  "license": "ISC"
+}
