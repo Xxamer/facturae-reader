@@ -1,75 +1,43 @@
-function getFacturae() {}
+function getFacturae() {
+  return "FacturaeTooling POC";
+}
 
 async function readFacturae(file) {
   const text = await file.text();
   const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString(text, "application/xml");
+  const xmlDoc = parser.parseFromString(text, "text/xml");
+  const number = xmlDoc.getElementsByTagName("BatchIdentifier")[0].textContent;
+  const totalInvoiceAmount =
+    xmlDoc.getElementsByTagName("TotalAmount")[0].textContent;
+  const taxRate = xmlDoc.getElementsByTagName("TaxRate")[0].textContent;
+  const date = xmlDoc.getElementsByTagName("IssueDate")[0].textContent;
+  const totalWithoutTax = xmlDoc.getElementsByTagName(
+    "TotalGrossAmountBeforeTaxes"
+  )[0].textContent;
+  const taxes = xmlDoc.getElementsByTagName("TotalTaxOutputs")[0].textContent;
 
-  // Namespace de Facturae 3.2.2
-  const NS = "http://www.facturae.gob.es/formato/Versiones/Facturaev3_2_2.xml";
-
-  const getText = (parent, tag) => {
-    const el = parent.getElementsByTagNameNS(NS, tag)[0];
-    return el ? el.textContent : "";
-  };
-
-  const number = getText(xmlDoc, "BatchIdentifier");
-  const totalInvoiceAmount = getText(xmlDoc, "TotalAmount");
-  const taxRate = getText(xmlDoc, "TaxRate");
-  const date = getText(xmlDoc, "IssueDate");
-  const totalWithoutTax = getText(xmlDoc, "TotalGrossAmountBeforeTaxes");
-  const taxes = getText(xmlDoc, "TotalTaxOutputs");
-
-  const seller = xmlDoc.getElementsByTagNameNS(NS, "SellerParty")[0];
-  const buyer = xmlDoc.getElementsByTagNameNS(NS, "BuyerParty")[0];
-  const invoiceLines = xmlDoc.getElementsByTagNameNS(NS, "InvoiceLine");
-
-  // ---- Seller Data ----
-  let sellerName = "", sellerAddress = "", sellerTown = "", sellerProvince = "", sellerPostCode = "";
-  if (seller) {
-    if (seller.getElementsByTagNameNS(NS, "LegalEntity").length > 0) {
-      // Empresa
-      sellerName = getText(seller, "CorporateName");
-    } else if (seller.getElementsByTagNameNS(NS, "Individual").length > 0) {
-      // Persona física
-      const individual = seller.getElementsByTagNameNS(NS, "Individual")[0];
-      sellerName = [
-        getText(individual, "Name"),
-        getText(individual, "FirstSurname"),
-        getText(individual, "SecondSurname")
-      ].filter(Boolean).join(" ");
-    }
-    sellerAddress = getText(seller, "Address");
-    sellerTown = getText(seller, "Town");
-    sellerProvince = getText(seller, "Province");
-    sellerPostCode = getText(seller, "PostCode");
-  }
-
-  // ---- Buyer Data ----
-  let buyerName = "", buyerAddress = "", buyerTown = "", buyerProvince = "", buyerPostCode = "";
-  if (buyer) {
-    if (buyer.getElementsByTagNameNS(NS, "LegalEntity").length > 0) {
-      buyerName = getText(buyer, "CorporateName");
-    } else if (buyer.getElementsByTagNameNS(NS, "Individual").length > 0) {
-      const individual = buyer.getElementsByTagNameNS(NS, "Individual")[0];
-      buyerName = [
-        getText(individual, "Name"),
-        getText(individual, "FirstSurname"),
-        getText(individual, "SecondSurname")
-      ].filter(Boolean).join(" ");
-    }
-    buyerAddress = getText(buyer, "Address");
-    buyerTown = getText(buyer, "Town");
-    buyerProvince = getText(buyer, "Province");
-    buyerPostCode = getText(buyer, "PostCode");
-  }
-
-  // ---- Items ----
+  const seller = xmlDoc.getElementsByTagName("SellerParty")[0];
+  const buyer = xmlDoc.getElementsByTagName("BuyerParty")[0];
+  const invoiceLines = xmlDoc.getElementsByTagName("InvoiceLine");
+  const sellerName =
+    seller.getElementsByTagName("CorporateName")[0].textContent;
+  const sellerAddress = seller.getElementsByTagName("Address")[0].textContent;
+  const sellerTown = seller.getElementsByTagName("Town")[0].textContent;
+  const sellerProvince = seller.getElementsByTagName("Province")[0].textContent;
+  const sellerPostCode = seller.getElementsByTagName("PostCode")[0].textContent;
+  const buyerName = buyer.getElementsByTagName("CorporateName")[0].textContent;
+  const buyerAddress = buyer.getElementsByTagName("Address")[0].textContent;
+  const buyerTown = buyer.getElementsByTagName("Town")[0].textContent;
+  const buyerProvince = buyer.getElementsByTagName("Province")[0].textContent;
+  const buyerPostCode = buyer.getElementsByTagName("PostCode")[0].textContent;
   let itemsFacturae = [];
   for (let i = 0; i < invoiceLines.length; i++) {
-    const description = getText(invoiceLines[i], "ItemDescription");
-    const quantity = getText(invoiceLines[i], "Quantity");
-    const price = getText(invoiceLines[i], "UnitPriceWithoutTax");
+    const description =
+      invoiceLines[i].getElementsByTagName("ItemDescription")[0].textContent;
+    const quantity =
+      invoiceLines[i].getElementsByTagName("Quantity")[0].textContent;
+    const price = invoiceLines[i].getElementsByTagName("UnitPriceWithoutTax")[0]
+      .textContent;
 
     itemsFacturae.push({
       product: description,
