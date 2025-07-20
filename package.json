@@ -1,6 +1,6 @@
 {
   "name": "facturaereader",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A npm package to read Facturae XML files and extract relevant information to a JSON object.",
   "main": "index.js",
   "types": "index.d.ts",
