@@ -1,7 +1,7 @@
 ### Para empezar a desarrollar
- - Nos descargamos el código (duh).
- - En dónde querramos usar la librería hacemos ``` npm link factureareader ```
- - A funcionar
+ - Pull the code (duh).
+ - ``` npm link factureareader ```
+ - Let's work
 
 ### How to use
 

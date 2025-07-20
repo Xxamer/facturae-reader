@@ -3,56 +3,95 @@ function getFacturae() {
 }
 
 async function readFacturae(file) {
+  if (!file || !(file instanceof File)) {
+    throw new Error("Invalid input: File is required");
+  }
+
   const text = await file.text();
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(text, "text/xml");
-  const number = xmlDoc.getElementsByTagName("BatchIdentifier")[0]?.textContent ?? "";
-  const totalInvoiceAmount =
-    xmlDoc.getElementsByTagName("TotalAmount")[0]?.textContent ?? "";
-  const taxRate = xmlDoc.getElementsByTagName("TaxRate")[0]?.textContent ?? "";
-  const date = xmlDoc.getElementsByTagName("IssueDate")[0]?.textContent ?? "";
-  const totalWithoutTax = xmlDoc.getElementsByTagName(
-    "TotalGrossAmountBeforeTaxes"
-  )[0]?.textContent ?? "";
-  const taxes = xmlDoc.getElementsByTagName("TotalTaxOutputs")[0]?.textContent ?? "";
 
-  const seller = xmlDoc.getElementsByTagName("SellerParty")[0];
-  const buyer = xmlDoc.getElementsByTagName("BuyerParty")[0];
-  const invoiceLines = xmlDoc.getElementsByTagName("InvoiceLine");
-  const sellerName =
-    seller?.getElementsByTagName("CorporateName")[0]?.textContent ?? "";
-  const sellerAddress = seller?.getElementsByTagName("Address")[0]?.textContent ?? "";
-  const sellerTown = seller?.getElementsByTagName("Town")[0]?.textContent ?? "";
-  const sellerProvince = seller?.getElementsByTagName("Province")[0]?.textContent ?? "";
-  const sellerPostCode = seller?.getElementsByTagName("PostCode")[0]?.textContent ?? "";
-  const buyerName = buyer?.getElementsByTagName("CorporateName")[0]?.textContent ?? "";
-  const buyerAddress = buyer?.getElementsByTagName("Address")[0]?.textContent ?? "";
-  const buyerTown = buyer?.getElementsByTagName("Town")[0]?.textContent ?? "";
-  const buyerProvince = buyer?.getElementsByTagName("Province")[0]?.textContent ?? "";
-  const buyerPostCode = buyer?.getElementsByTagName("PostCode")[0]?.textContent ?? "";
+  if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+    throw new Error("Invalid XML format");
+  }
+
+  // Detect version
+  const root = xmlDoc.documentElement;
+  const NS_322 =
+    "http://www.facturae.gob.es/formato/Versiones/Facturaev3_2_2.xml";
+  const NS_321 = "http://www.facturae.es/Facturae/2009/v3.2.1/Facturae";
+
+  const version =
+    root.namespaceURI === NS_322
+      ? "3.2.2"
+      : root.namespaceURI === NS_321
+      ? "3.2.1"
+      : "3.1";
+
+  const useNS = version === "3.2.2" || version === "3.2.1";
+  const ns = version === "3.2.2" ? NS_322 : NS_321;
+  
+  const getText = (parent, tag) => {
+    if (!parent) return "";
+    if (useNS) {
+      const el = parent.getElementsByTagNameNS(ns, tag)[0];
+      return el?.textContent ?? "";
+    }
+    const el = parent.getElementsByTagName(tag)[0];
+    return el?.textContent ?? "";
+  };
+
+  // Get elements using the helper
+  const number = getText(xmlDoc, "BatchIdentifier");
+  const totalInvoiceAmount = getText(xmlDoc, "TotalAmount");
+  const taxRate = getText(xmlDoc, "TaxRate");
+  const date = getText(xmlDoc, "IssueDate");
+  const totalWithoutTax = getText(xmlDoc, "TotalGrossAmountBeforeTaxes");
+  const taxes = getText(xmlDoc, "TotalTaxOutputs");
+
+  const seller = useNS
+    ? xmlDoc.getElementsByTagNameNS(ns, "SellerParty")[0]
+    : xmlDoc.getElementsByTagName("SellerParty")[0];
+
+  const buyer = useNS
+    ? xmlDoc.getElementsByTagNameNS(ns, "BuyerParty")[0]
+    : xmlDoc.getElementsByTagName("BuyerParty")[0];
+
+  const invoiceLines = useNS
+    ? xmlDoc.getElementsByTagNameNS(ns, "InvoiceLine")
+    : xmlDoc.getElementsByTagName("InvoiceLine");
+
+  // Get seller details
+  const sellerName = getText(seller, "CorporateName");
+  const sellerAddress = getText(seller, "Address");
+  const sellerTown = getText(seller, "Town");
+  const sellerProvince = getText(seller, "Province");
+  const sellerPostCode = getText(seller, "PostCode");
+
+  // Get buyer details
+  const buyerName = getText(buyer, "CorporateName");
+  const buyerAddress = getText(buyer, "Address");
+  const buyerTown = getText(buyer, "Town");
+  const buyerProvince = getText(buyer, "Province");
+  const buyerPostCode = getText(buyer, "PostCode");
+
+  // Get products
   let itemsFacturae = [];
   for (let i = 0; i < invoiceLines.length; i++) {
-    const description =
-      invoiceLines[i]?.getElementsByTagName("ItemDescription")[0]?.textContent ?? "";
-    const quantity =
-      invoiceLines[i]?.getElementsByTagName("Quantity")[0]?.textContent ?? "";
-    const price = invoiceLines[i]?.getElementsByTagName("UnitPriceWithoutTax")[0]
-      ?.textContent ?? "";
-
     itemsFacturae.push({
-      product: description,
-      quantity: quantity,
-      price: price,
+      product: getText(invoiceLines[i], "ItemDescription"),
+      quantity: getText(invoiceLines[i], "Quantity"),
+      price: getText(invoiceLines[i], "UnitPriceWithoutTax"),
     });
   }
 
   return {
     invoice: {
-      number: number,
-      date: date,
+      number,
+      date,
       total: totalInvoiceAmount,
       taxPrice: taxes,
-      taxRate: taxRate,
+      taxRate,
       priceWithoutTax: totalWithoutTax,
     },
     seller: {
@@ -70,6 +109,7 @@ async function readFacturae(file) {
       postal_code: buyerPostCode,
     },
     products: itemsFacturae,
+    version,
   };
 }
 
