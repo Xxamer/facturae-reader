@@ -6,15 +6,12 @@ async function readFacturae(file) {
   if (!file || !(file instanceof File)) {
     throw new Error("Invalid input: File is required");
   }
-
   const text = await file.text();
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(text, "text/xml");
-
   if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
     throw new Error("Invalid XML format");
   }
-
   // Detect version
   const root = xmlDoc.documentElement;
   const NS_322 =
@@ -30,7 +27,7 @@ async function readFacturae(file) {
 
   const useNS = version === "3.2.2" || version === "3.2.1";
   const ns = version === "3.2.2" ? NS_322 : NS_321;
-  
+
   const getText = (parent, tag) => {
     if (!parent) return "";
     if (useNS) {
@@ -41,7 +38,6 @@ async function readFacturae(file) {
     return el?.textContent ?? "";
   };
 
-  // Get elements using the helper
   const number = getText(xmlDoc, "BatchIdentifier");
   const totalInvoiceAmount = getText(xmlDoc, "TotalAmount");
   const taxRate = getText(xmlDoc, "TaxRate");
@@ -74,8 +70,6 @@ async function readFacturae(file) {
   const buyerTown = getText(buyer, "Town");
   const buyerProvince = getText(buyer, "Province");
   const buyerPostCode = getText(buyer, "PostCode");
-
-  // Get products
   let itemsFacturae = [];
   for (let i = 0; i < invoiceLines.length; i++) {
     itemsFacturae.push({
