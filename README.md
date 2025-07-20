@@ -5,7 +5,7 @@ A JavaScript library for parsing Spanish electronic invoices in Facturae format 
 ## Installation
 
 ```bash
-npm install facturereader
+npm install facturaereader
 ```
 ### Example
 You can check a live example of using this package in https://facturae-reader-example.vercel.app/
