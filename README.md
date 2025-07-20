@@ -1,50 +1,149 @@
-### Para empezar a desarrollar
- - Pull the code (duh).
- - ``` npm link factureareader ```
- - Let's work
+# FacturaeReader
 
-### How to use
+A JavaScript library for parsing Spanish electronic invoices in Facturae format (versions 3.1, 3.2.1, and 3.2.2).
 
----
+## Installation
 
-## Usage in a web page
+```bash
+npm install facturereader
+```
+### Example
+You can check a live example of using this package in https://facturae-reader-example.vercel.app/
 
-You can use the `readFacturae` function to read and extract data from an electronic invoice in Facturae format from an XML file uploaded by the user.
+## Features
 
-### Basic example
+- Supports Facturae versions 3.1, 3.2.1, and 3.2.2
+- Automatic version detection
+- Type definitions included
+- Browser compatible
+- Zero dependencies
 
-1. **Import the function**  
-   If you use a bundler (like Vite, Webpack, etc.), import the function in your JS file:
+## Usage
 
-   ```javascript
-   import { readFacturae } from 'factureareader';
-   ```
+### Basic Example
 
-2. **Add a file input in your HTML**:
+```javascript
+import { readFacturae } from 'factureareader';
 
-   ```html
-   <input type="file" id="facturaeInput" accept=".xml" />
-   <pre id="output"></pre>
-   ```
+const input = document.getElementById('facturaeInput');
 
-3. **Read the file and display the data**:
+input.addEventListener('change', async (event) => {
+  try {
+    const file = event.target.files[0];
+    const facturaData = await readFacturae(file);
+    console.log(facturaData);
+  } catch (error) {
+    console.error('Error reading invoice:', error.message);
+  }
+});
+```
 
-   ```javascript
-   const input = document.getElementById('facturaeInput');
-   const output = document.getElementById('output');
+### Return Type Structure
 
-   input.addEventListener('change', async (event) => {
-     const file = event.target.files[0];
-     if (file) {
-       const facturaData = await readFacturae(file);
-       output.textContent = JSON.stringify(facturaData, null, 2);
-     }
-   });
-   ```
+The `readFacturae` function returns a Promise that resolves to an object with the following structure:
 
-### Notes
+```typescript
+interface FacturaeResult {
+  invoice: {
+    number: string;
+    date: string;
+    total: string;
+    taxPrice: string;
+    taxRate: string;
+    priceWithoutTax: string;
+  };
+  seller: {
+    name: string;
+    address: string;
+    town: string;
+    province: string;
+    postal_code: string;
+  };
+  buyer: {
+    name: string;
+    address: string;
+    town: string;
+    province: string;
+    postal_code: string;
+  };
+  products: Array<{
+    product: string;
+    quantity: string;
+    price: string;
+  }>;
+  version: string; // "3.1" | "3.2.1" | "3.2.2"
+}
+```
 
-- The file must be a valid XML in Facturae version 3.2.2 format.
-- The `readFacturae` function returns an object with the main invoice data, seller, buyer, and products.
+### Error Handling
 
----
+The library throws errors in the following cases:
+
+```javascript
+// Invalid or missing file
+if (!file) {
+  throw new Error('Invalid input: File is required');
+}
+
+// Invalid XML format
+if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+  throw new Error('Invalid XML format');
+}
+```
+
+### Complete Example
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Facturae Reader Example</title>
+</head>
+<body>
+  <input type="file" id="facturaeInput" accept=".xml" />
+  <pre id="output"></pre>
+
+  <script type="module">
+    import { readFacturae } from 'factureareader';
+
+    const input = document.getElementById('facturaeInput');
+    const output = document.getElementById('output');
+
+    input.addEventListener('change', async (event) => {
+      try {
+        const file = event.target.files[0];
+        const facturaData = await readFacturae(file);
+        output.textContent = JSON.stringify(facturaData, null, 2);
+      } catch (error) {
+        output.textContent = `Error: ${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+## Development
+
+1. Clone the repository
+2. Run `npm install`
+3. Link the package locally:
+```bash
+npm link
+```
+4. In your project:
+```bash
+npm link factureareader
+```
+
+## Supported Formats
+
+The library automatically detects and supports the following Facturae versions:
+
+- Facturae 3.1
+- Facturae 3.2.1 (namespace: http://www.facturae.es/Facturae/2009/v3.2.1/Facturae)
+- Facturae 3.2.2 (namespace: http://www.facturae.gob.es/formato/Versiones/Facturaev3_2_2.xml)
+
+## License
+
+MIT
