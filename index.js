@@ -18,16 +18,18 @@ async function readFacturae(file) {
     "http://www.facturae.gob.es/formato/Versiones/Facturaev3_2_2.xml";
   const NS_321 = "http://www.facturae.es/Facturae/2009/v3.2.1/Facturae";
 
-  const version =
+  // Primero, detecta la versión base por namespace
+  let baseVersion =
     root.namespaceURI === NS_322
       ? "3.2.2"
       : root.namespaceURI === NS_321
       ? "3.2.1"
       : "3.1";
 
-  const useNS = version === "3.2.2" || version === "3.2.1";
-  const ns = version === "3.2.2" ? NS_322 : NS_321;
+  let useNS = baseVersion === "3.2.2" || baseVersion === "3.2.1";
+  let ns = baseVersion === "3.2.2" ? NS_322 : NS_321;
 
+  // Ahora puedes declarar getText
   const getText = (parent, tag) => {
     if (!parent) return "";
     if (useNS) {
@@ -37,6 +39,10 @@ async function readFacturae(file) {
     const el = parent.getElementsByTagName(tag)[0];
     return el?.textContent ?? "";
   };
+
+  // Ahora puedes obtener SchemaVersion y la versión final
+  const schemaVersion = getText(xmlDoc, "SchemaVersion");
+  const version = schemaVersion || baseVersion;
 
   const number = getText(xmlDoc, "BatchIdentifier");
   const totalInvoiceAmount = getText(xmlDoc, "TotalAmount");

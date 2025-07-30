@@ -1,6 +1,6 @@
 {
   "name": "facturaereader",
-  "version": "1.0.6",
+  "version": "1.1.1",
   "description": "A npm package to read Facturae XML files and extract relevant information to a JSON object.",
   "main": "index.js",
   "types": "index.d.ts",
@@ -8,5 +8,16 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Christian Granado Rodríguez",
-  "license": "ISC"
+  "license": "ISC",
+  "keywords": [
+    "facturae",
+    "xml",
+    "json",
+    "reader",
+    "invoices",
+    "parser"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Xxamer/facturae-reader"  }
 }
